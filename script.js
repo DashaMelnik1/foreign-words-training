@@ -2,7 +2,7 @@ const studyMode = document.querySelector('#study-mode');
 const currentWord = document.querySelector('#current-word');
 const totalWord = document.querySelector('#total-word');
 const wordsProgress = document.querySelector('#words-progress');
-const shuffleWords = document.querySelector('#shuffle-words');
+const buttonShuffleWords = document.querySelector('#shuffle-words');
 const examMode = document.querySelector('#exam-mode');
 const examProgress = document.querySelector('#exam-progress');
 const correctPercent = document.querySelector('#correct-percent');
@@ -12,13 +12,13 @@ const flipCard = document.querySelector('.flip-card');
 const titleFront = document.querySelector('.title-front');
 const titleBack = document.querySelector('.title-back');
 const example = document.querySelector('.example-back');
-const back = document.querySelector('#back');
-const exam = document.querySelector('#exam');
-const next = document.querySelector('#next');
+const buttonBack = document.querySelector('#back');
+const buttonExam = document.querySelector('#exam');
+const buttonNext = document.querySelector('#next');
 const examCards = document.querySelector('#exam-cards');
 const time = document.querySelector('#time');
 
-class Items {
+class Item {
     constructor(title, translation, example) {
         this.title = title;
         this.translation = translation;
@@ -26,12 +26,12 @@ class Items {
     }
 }
 
-const item1 = new Items('cat', 'кот', 'домашнее животное с повадками хищника из семейства кошачьих');
-const item2 = new Items('dog', 'собака', 'домашнее животное сем. псовых, родственное волку');
-const item3 = new Items('banana', 'банан', 'удлиненный съедобный плод, с ботанической точки зрения являющийся ягодой ');
-const item4 = new Items('house', 'дом', 'архитектурное сооружение, предназначенное для жилья');
-const item5 = new Items('fish', 'рыба', 'водное челюстноротое позвоночное животное');
-const item6 = new Items('car', 'автомобиль', 'моторное безрельсовое дорожное и/или внедорожное, чаще всего автономное, транспортное средство');
+const item1 = new Item('cat', 'кот', 'a pet with the habits of a feline predator');
+const item2 = new Item('dog', 'собака', 'a pet related to a wolf');
+const item3 = new Item('banana', 'банан', 'an elongated edible fruit, which is a berry from a botanical point of view');
+const item4 = new Item('house', 'дом', 'an architectural structure designed for housing');
+const item5 = new Item('fish', 'рыба', 'an aquatic maxillofacial vertebrate');
+const item6 = new Item('car', 'автомобиль', 'a motorized trackless road and/or off-road, most often autonomous, vehicle');
 
 const arr = [item1, item2, item3, item4, item5, item6];
 
@@ -55,31 +55,25 @@ function showCard(content) {
 
 showCard(arr[currentIndex]);
 
-
-next.addEventListener('click', function() {
+buttonNext.addEventListener('click', function() {
     currentIndex++;
     showCard(arr[currentIndex]);
-    back.disabled = false;
-    if (currentIndex == arr.length - 1) {
-        next.disabled = true;
-    }
+    buttonBack.disabled = false;
+    buttonNext.disabled = currentIndex === arr.length - 1;
 })
 
-back.addEventListener('click', function() {
+buttonBack.addEventListener('click', function() {
     currentIndex--;
     showCard(arr[currentIndex]);
-    next.disabled = false;
-    if (currentIndex == 0) {
-        back.disabled = true;
-    }
+    buttonNext.disabled = false;
+    buttonBack.disabled = currentIndex === 0;
 })
 
 totalWord.textContent = arr.length;
 
-shuffleWords.addEventListener('click', function() {
+buttonShuffleWords.addEventListener('click', function() {
     arr.sort(() => Math.random() - 0.5);
     showCard(arr[currentIndex]);
-
 })
 
 function createTestcard(obj) {
@@ -105,11 +99,11 @@ function addCard() {
     examCards.innerHTML = '';
     examCards.append(fragment);
 }
+
 let timerId;
 let seconds = 0;
 let minutes = 0;
 let isRunning = false;
-
 
 function format(val) {
     if (val < 10) {
@@ -128,7 +122,7 @@ function countTimer() {
     }
 }
 
-exam.addEventListener('click', function() {
+buttonExam.addEventListener('click', function() {
     studyCards.classList.add('hidden');
     studyMode.classList.add('hidden');
     examMode.classList.remove('hidden');
@@ -144,56 +138,61 @@ currentIndex = 0;
 
 function wordTranslation(currentCard) {
     if (!selectedCard) {
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.classList.remove('correct');
-            card.classList.remove('wrong');
-        })
+        removeCards();
         currentCard.classList.add('correct');
         selectedCard = currentCard;
     } else {
         const wordObject = arr.find(word => word.translation === selectedCard.textContent || word.title === selectedCard.textContent);
-        if (wordObject.translation === currentCard.textContent || wordObject.title === currentCard.textContent) {
-            currentIndex++;
-            correctPercent.textContent = Math.round(100 * currentIndex / arr.length) + '%';
-            examProgress.value = (currentIndex) / arr.length * 100;
-            currentCard.classList.add('correct');
-            currentCard.classList.add('fade-out');
-            selectedCard.classList.add('fade-out');
-            const cards = document.querySelectorAll('.card');
-            let disappeared = true;
-            cards.forEach(card => {
-                if (!card.classList.contains('fade-out')) {
-                    disappeared = false;
-                }
-            });
-            if (disappeared) {
-                setTimeout(() => {
-                    alert(`Проверка знаний успешно завершена!`);
-                    clearInterval(timerId);
-                    isRunning = false;
-                    statistics();
-                }, 1000);
-            }
-        } else {
-            selectedCard.classList.add('correct');
-            currentCard.classList.add('wrong');
-            setTimeout(() => {
+        if (selectedCard !== currentCard) {
+            if (wordObject.translation === currentCard.textContent || wordObject.title === currentCard.textContent) {
+                currentIndex++;
+                correctPercent.textContent = Math.round(100 * currentIndex / arr.length) + '%';
+                examProgress.value = (currentIndex) / arr.length * 100;
+                currentCard.classList.add('correct');
+                removeCorrectCards([currentCard, selectedCard]);
                 const cards = document.querySelectorAll('.card');
+                let disappeared = true;
                 cards.forEach(card => {
-                    card.classList.remove('correct');
-                    card.classList.remove('wrong');
+                    if (!card.classList.contains('fade-out')) {
+                        disappeared = false;
+                    }
                 });
-            }, 500);
+                if (disappeared) {
+                    setTimeout(() => {
+                        alert(`Проверка знаний успешно завершена!`);
+                        clearInterval(timerId);
+                        isRunning = false;
+                        statistics();
+                    }, 1000);
+                }
+            } else {
+                selectedCard.classList.add('correct');
+                currentCard.classList.add('wrong');
+                setTimeout(() => {
+                    removeCards();
+                }, 500);
+            }
         }
         selectedCard = null;
     }
 }
 
+function removeCards() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.classList.remove('correct');
+        card.classList.remove('wrong');
+    })
+}
+
+function removeCorrectCards(cards) {
+    cards.forEach(card => {
+        card.classList.add('fade-out');
+    })
+}
+
 const resultsModal = document.querySelector('.results-modal');
 const timer = document.querySelector('#timer');
-
-const cardTemplate = document.querySelector('#word-stats');
 
 function statistics() {
     resultsModal.classList.remove('hidden');
