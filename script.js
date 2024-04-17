@@ -141,6 +141,7 @@ function wordTranslation(currentCard) {
         removeCards();
         currentCard.classList.add('correct');
         selectedCard = currentCard;
+        currentCard.style.pointerEvents = "none";
     } else {
         const wordObject = arr.find(word => word.translation === selectedCard.textContent || word.title === selectedCard.textContent);
         if (selectedCard !== currentCard) {
@@ -152,6 +153,7 @@ function wordTranslation(currentCard) {
                 removeCorrectCards([currentCard, selectedCard]);
                 const cards = document.querySelectorAll('.card');
                 let disappeared = true;
+                currentCard.style.pointerEvents = "none";
                 cards.forEach(card => {
                     if (!card.classList.contains('fade-out')) {
                         disappeared = false;
@@ -171,6 +173,8 @@ function wordTranslation(currentCard) {
                 setTimeout(() => {
                     removeCards();
                 }, 500);
+                currentCard.style.pointerEvents = "all";
+                selectedCard.style.pointerEvents = "all";
             }
         }
         selectedCard = null;
